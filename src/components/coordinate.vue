@@ -48,7 +48,9 @@ export default {
     }
   },
   mounted () {
+    // 画布边界
     let boundary = 1000
+    // 坐标系原点
     let base = {
       x: 500,
       y: 325
@@ -56,6 +58,7 @@ export default {
     // 绘制坐标系
     let ctx = this.$refs.canvas.getContext('2d')
     this.init(boundary, base, ctx, this.size)
+    // 监听画布size变量，修改左边
     this.$watch(function () {
       return this.size
     }, function () {

@@ -1,8 +1,12 @@
 <template>
   <div class="myCanvas">
+      <!-- 网格画布 -->
       <grid :show="showGrid" :size="size" :step="step"></grid>
+      <!-- 坐标画布 -->
       <coordinate :step="step" :size="size"></coordinate>
+      <!-- 函数画布 -->
       <drawFunc :funcList="funcList" :step="step" :refreshBool="refresh" :size="size"></drawFunc>
+      <!-- 刷新，放大，缩小按钮组件 -->
       <btn :show="showGrid"
            :refreshBool="refresh"
            @toggleGridShow="toggleGridShow" 
@@ -49,7 +53,7 @@ export default {
       }
     },
     sub () {
-      if (this.size > 0.25) {
+      if (this.size > 0.5) {
         this.size = this.size / 2
       }
     }

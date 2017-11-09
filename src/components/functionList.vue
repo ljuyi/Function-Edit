@@ -5,7 +5,7 @@
               <span class="title">{{`表达式${index+1}`}}</span>
               <div :style="{color:list.color}">
                 <span>y=</span>
-                <div :class="{active: edit[index]}" ref="editF">
+                <div :class="{active: edit[index]}" ref="editDiv">
                   <span v-html="list.function"></span>
                 </div>
                 <i class="iconfont icon-jianpan" :class="{active: edit[index]}" @click="editFunction($event, index)" :style="right"></i>
@@ -15,6 +15,7 @@
       </ul>
       <div class="panel-warrper" ref="panel" :functionList="lists">
         <panel @editNumber="editNumber"
+               @editSymbol="editSymbol"
                @deletePanel="deletePanel"
                @enter="enter"
                @moveLeft="moveLeft"
@@ -31,7 +32,8 @@ export default {
     return {
       edit: [],
       thisFunction: '',
-      editIndex: 0
+      editIndex: 0,
+      selectionStart: ''
     }
   },
   props: {
@@ -40,22 +42,36 @@ export default {
     }
   },
   methods: {
+    // 编辑函数
+    // 隐藏DIV，显示input框，显示键盘面板
+    // 记录光标位置
+    // 记录编辑函数的下标
     editFunction (event, index) {
       let target = event.target
       this.$set(this.edit, index, true)
-      this.$refs.editF[index].style.display = 'none'
+      this.$refs.editDiv[index].style.display = 'none'
       this.thisFunction = this.lists[index].function.replace(/<[sup>]*>/g, '^').replace(/<[^>]*>/g, '')
       this.$refs.panel.style.top = parseInt(target.parentNode.offsetTop) + 35 + 'px'
       this.$refs.panel.style.left = parseInt(target.parentNode.offsetLeft) + 30 + 'px'
       this.$refs.panel.style.display = 'block'
       this.editIndex = index
+      this.selectionStart = this.thisFunction.length
     },
+    // input框内录入虚拟键盘点击数字或符号
     editNumber (value, index) {
       let fn = this.$refs.in[0].value
-      let selectionStart = this.$refs.in[0].selectionStart
-      fn = fn.slice(0, selectionStart - 1) + value + fn.slice(selectionStart - 1)
+      fn = fn.slice(0, this.selectionStart) + value + fn.slice(this.selectionStart)
       this.thisFunction = fn
+      this.selectionStart++
     },
+    // 点击虚拟键盘上的数学符号
+    editSymbol (obj) {
+      this.$emit('editSymbol', obj)
+      this.$set(this.edit, this.editIndex, false)
+      this.$refs.panel.style.display = 'none'
+      this.$refs.editDiv[this.editIndex].style.display = 'inline-block'
+    },
+    // 触发回车事件
     enter (event, index) {
       if (arguments.length === 0 || event.keyCode === 13) {
         let target = event ? event.target : this.$refs.ul.querySelector('input.active')
@@ -63,24 +79,37 @@ export default {
         this.lists[i].function = target.value.replace(/\^(-)?\d+(\.\d+)?/g, function (v) {
           return '<sup>' + v.slice(1) + '</sup>'
         })
-        let that = this
-        this.edit.forEach(function (item) {
-          that.$set(that.edit, i, false)
-          that.$refs.panel.style.display = 'none'
-          that.$refs.editF[i].style.display = 'inline-block'
-        })
+        this.$set(this.edit, i, false)
+        this.$refs.panel.style.display = 'none'
+        this.$refs.editDiv[i].style.display = 'inline-block'
       }
     },
+    // 光标左移
     moveLeft () {
-      this.$refs.in[0].selectionStart--
+      if (this.selectionStart === '') {
+        this.selectionStart = this.$refs.in[0].value.length
+      }
+      if (this.selectionStart > 0) {
+        this.selectionStart--
+        this.$refs.in[0].selectionStart = this.selectionStart
+      }
     },
+    // 光标右移
+    moveRight () {
+      if (this.selectionStart !== '' && this.selectionStart < this.$refs.in[0].value.length) {
+        this.selectionStart++
+        this.$refs.in[0].selectionStart = this.selectionStart
+      }
+    },
+    // 删除
     deletePanel () {
-      let selectionStart = this.$refs.in[0].selectionStart
-      this.thisFunction = this.thisFunction.slice(0, selectionStart - 1) + this.thisFunction.slice(selectionStart)
+      this.thisFunction = this.thisFunction.slice(0, this.selectionStart - 1) + this.thisFunction.slice(this.selectionStart)
+      this.selectionStart--
     }
   },
   created () {
     let that = this
+    // 格式化显示函数
     this.lists.forEach(function (item, index) {
       that.lists[index].function = item.function.replace(/loge+/g, function (v) {
         return 'log<sub>' + v.slice(3) + '</sub>'
@@ -144,12 +173,12 @@ export default {
           &.active
             display: block
         input
-          width: 100px
+          width: 180px
           display: none
           height: 32px
           font-size: 20px
           border: none
-          border: 1px solid #00FF80
+          border: 2px solid #77C34F
           border-radius: 5px
           outline: none
           &.active
@@ -157,7 +186,6 @@ export default {
   .panel-warrper
     position: absolute
     display: none
-    width: 452px
+    width: 501px
     height: 200px
 </style>
-

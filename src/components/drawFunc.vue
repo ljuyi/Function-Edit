@@ -23,11 +23,36 @@ export default {
     }
   },
   methods: {
+    // 格式化数组
     initFunction (func) {
       let str = ''
       str = func.function.replace(/<[sup>]*>/g, '^').replace(/<[^>]*>/g, '')
       this.list.push({function: str, type: func.type, color: func.color})
     },
+    // 划线函数
+    drawLine (obj, func, color, size, step) {
+      let str = ''
+      let x = -20 / size
+      let result
+      let lastPoint = {}
+      while (x < 20 / size) {
+        str = 'let x=' + x + ';'
+        result = window.eval(str + func)
+        if (lastPoint) {
+          obj.beginPath()
+          obj.moveTo(lastPoint.x, lastPoint.y)
+          obj.lineTo(500 + x * step * size, 325 - result * step * size)
+          obj.strokeStyle = color
+          obj.lineWidth = 3
+          obj.stroke()
+          obj.closePath()
+        }
+        lastPoint.x = 500 + x * step * size
+        lastPoint.y = 325 - result * step * size
+        x += (0.05 / size)
+      }
+    },
+    // 一次函数
     linear (func, obj, color) {
       /* eslint no-eval: "off" */
       let x = -20 / this.size
@@ -46,39 +71,16 @@ export default {
       obj.stroke()
       obj.closePath()
     },
-    quadratic (func, obj, color, size) {
-      let strf = func
-      let str = ''
-      let x = -20 / this.size
-      let result
-      let lastPoint = {}
-      strf = strf.replace(/\w+\^2/g, function () {
+    // 二次函数
+    quadratic (func, obj, color) {
+      func = func.replace(/\w+\^2/g, function () {
         return 'x*x'
       })
-      while (x < 20 / this.size) {
-        str = 'let x=' + x + ';'
-        result = window.eval(str + strf.slice(0))
-        if (lastPoint) {
-          obj.beginPath()
-          obj.moveTo(lastPoint.x, lastPoint.y)
-          obj.lineTo(500 + x * this.step * this.size, 325 - result * this.step * this.size)
-          obj.strokeStyle = color
-          obj.lineWidth = 3
-          obj.stroke()
-          obj.closePath()
-        }
-        lastPoint.x = 500 + x * this.step * this.size
-        lastPoint.y = 325 - result * this.step * this.size
-        x += (this.size / 20)
-      }
+      this.$options.methods.drawLine(obj, func, color, this.size, this.step)
     },
-    power (func, obj, color, size) {
-      let strf = func
-      let str = ''
-      let x = -20 / this.size
-      let result
-      let lastPoint = {}
-      strf = strf.replace(/\w+\^-\d+(\.\d{1,2})?/g, function (str) {
+    // 幂函数
+    power (func, obj, color) {
+      func = func.replace(/\w+\^-\d+(\.\d{1,2})?/g, function (str) {
         let pow = parseFloat(str.slice(str.indexOf('-') + 1))
         let base = str.slice(0, str.indexOf('^'))
         if (pow >= 1) {
@@ -94,103 +96,41 @@ export default {
         }
         return '1/(' + base + ')'
       })
-      while (x < 20 / this.size) {
-        str = 'let x=' + x + ';'
-        result = window.eval(str + strf.slice(0))
-        if (lastPoint) {
-          obj.beginPath()
-          obj.moveTo(lastPoint.x, lastPoint.y)
-          obj.lineTo(500 + x * this.step * this.size, 325 - result * this.step * this.size)
-          obj.strokeStyle = color
-          obj.lineWidth = 3
-          obj.stroke()
-          obj.closePath()
-        }
-        lastPoint.x = 500 + x * this.step * this.size
-        lastPoint.y = 325 - result * this.step * this.size
-        x += (this.size / 100)
-      }
+      this.$options.methods.drawLine(obj, func, color, this.size, this.step)
     },
-    exponent (func, obj, color, size) {
+    // 指数函数
+    exponent (func, obj, color) {
       let base
-      let result
-      let lastPoint = {}
       func = func.replace(/\d+\^-?\w/g, function (word) {
         base = Number(word.slice(0, word.indexOf('^')))
-        return 'Math.pow(base, x)'
+        return 'Math.pow(' + base + ', x)'
       })
-      let x = -20 / this.size
-      while (x < 20 / this.size) {
-        result = eval('let base=' + base + ';let x=' + x + ';' + func)
-        if (lastPoint) {
-          obj.beginPath()
-          obj.moveTo(lastPoint.x, lastPoint.y)
-          obj.lineTo(500 + x * this.step * this.size, 325 - result * this.step * this.size)
-          obj.strokeStyle = color
-          obj.lineWidth = 3
-          obj.stroke()
-          obj.closePath()
-        }
-        lastPoint.x = 500 + x * this.step * this.size
-        lastPoint.y = 325 - result * this.step * this.size
-        x += (this.size / 10)
-      }
+      this.$options.methods.drawLine(obj, func, color, this.size, this.step)
     },
-    logarithm (func, obj, color, size) {
-      let result
-      let lastPoint = {}
+    // 对数函数
+    logarithm (func, obj, color) {
       func = func.replace(/loge\([^)]*\)/g, function (word) {
         return 'Math.log(' + word.slice(4) + ')'
       })
-      let x = 0
-      while (x < 20 / this.size) {
-        result = eval('let x=' + x + ';' + func)
-        if (lastPoint) {
-          obj.beginPath()
-          obj.moveTo(lastPoint.x, lastPoint.y)
-          obj.lineTo(500 + x * this.step * this.size, 325 - result * this.step * this.size)
-          obj.strokeStyle = color
-          obj.lineWidth = 3
-          obj.stroke()
-          obj.closePath()
-        }
-        lastPoint.x = 500 + x * this.step * this.size
-        lastPoint.y = 325 - result * this.step * this.size
-        x += (this.size / 200)
-      }
+      this.$options.methods.drawLine(obj, func, color, this.size, this.step)
     },
-    triangle (func, obj, color, size) {
-      let result
-      let lastPoint = {}
-      func = func.replace(/sin\([\d+]?\w\)/, function (word) {
-        let base = word.match(/\([\d+]?\w\)/g)[0]
+    // 三角函数
+    triangle (func, obj, color) {
+      func = func.replace(/sin\((\d+\*)?\w(.)*\)/g, function (word) {
+        let base = word.match(/\((\d+\*)?\w(.)*\)/g)[0]
         return 'Math.sin(' + base + ')'
       })
-      func = func.replace(/cos\([\d+]?\w\)/, function (word) {
-        let base = word.match(/\([\d+]?\w\)/g)[0]
+      func = func.replace(/cos\((\d+\*)?\w(.)*\)/g, function (word) {
+        let base = word.match(/\((\d+\*)?\w(.)*\)/g)[0]
         return 'Math.cos(' + base + ')'
       })
-      func = func.replace(/tan\([\d+]?\w\)/, function (word) {
-        let base = word.match(/\([\d+]?\w\)/g)[0]
+      func = func.replace(/tan\((\d+\*)?\w(.)*\)/g, function (word) {
+        let base = word.match(/\((\d+\*)?\w(.)*\)/g)[0]
         return 'Math.tan(' + base + ')'
       })
-      let x = -20 / this.size
-      while (x < 20 / this.size) {
-        result = eval('let x=' + x + ';' + func)
-        if (lastPoint) {
-          obj.beginPath()
-          obj.moveTo(lastPoint.x, lastPoint.y)
-          obj.lineTo(500 + x * this.step * this.size, 325 - result * this.step * this.size)
-          obj.strokeStyle = color
-          obj.lineWidth = 3
-          obj.stroke()
-          obj.closePath()
-        }
-        lastPoint.x = 500 + x * this.step * this.size
-        lastPoint.y = 325 - result * this.step * this.size
-        x += (this.size / 200)
-      }
+      this.$options.methods.drawLine(obj, func, color, this.size, this.step)
     },
+    // 刷新画布
     refresh (ctx) {
       ctx.beginPath()
       ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height)
