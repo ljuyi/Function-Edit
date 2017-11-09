@@ -34,6 +34,7 @@ export default {
     li
       display: flex
       flex-direction: column
+      justify-content: space-around
       flex: 1
       list-style-type: none
       border-bottom: 1px solid #BBB
