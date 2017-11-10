@@ -76,7 +76,14 @@ export default {
       let lastPoint = {}
       while (x < 20 / size) {
         str = 'let x=' + x + ';'
-        result = window.eval(str + func)
+        try {
+          result = window.eval(str + func)
+        } catch (e) {
+          if (e.message === 'Invalid or unexpected token' || e.message === 'Unexpected end of input') {
+            alert('error')
+            return
+          }
+        }
         if (lastPoint) {
           obj.beginPath()
           obj.moveTo(lastPoint.x, lastPoint.y)
