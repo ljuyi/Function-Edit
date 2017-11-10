@@ -80,7 +80,7 @@ export default {
           result = window.eval(str + func)
         } catch (e) {
           if (e.message === 'Invalid or unexpected token' || e.message === 'Unexpected end of input') {
-            alert('error')
+            alert('input error')
             return
           }
         }
